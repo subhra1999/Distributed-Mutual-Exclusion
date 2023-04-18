@@ -18,14 +18,36 @@ import threading
 
 print_lock = threading.Lock()
 
-# thread function
-def threaded(c):
+
+
+def Main():
+    host = ""
+
+    # reserve a port on your computer
+    # in our case it is 12345 but it
+    # can be anything
+    port = server_port
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    
+
+    print(f"server before binding {port}")
+    s.bind((host, port))
+    print("socket binded to port", port)
+
+    # put the socket into listening mode
+    # s.listen(50)
+    print("socket is listening")
+
+    # a forever loop until client wants to exit
     while True:
 
         # data received from client
-        data = c.recv(1024)
+        # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        data, addr = s.recvfrom(4096)
+        # data = .recv(1024)
         if not data:
-            print('Bye')
+            print('Boye')
             
             # lock released on exit
             print_lock.release()
@@ -52,44 +74,13 @@ def threaded(c):
             # convert to json and send reply
 
             # send back reversed string to client
-            c.send(json.dumps(node_data).encode())
+            # c.send(json.dumps(node_data).encode())
+            server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            server_socket.sendto(json.dumps(node_data).encode(), addr)
 
     # connection closed
-    c.close()
+    # c.close()
     # print_lock.release()
-
-
-def Main():
-    host = ""
-
-    # reserve a port on your computer
-    # in our case it is 12345 but it
-    # can be anything
-    port = server_port
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    
-
-    print(f"server before binding {port}")
-    s.bind((host, port))
-    print("socket binded to port", port)
-
-    # put the socket into listening mode
-    s.listen(50)
-    print("socket is listening")
-
-    # a forever loop until client wants to exit
-    while True:
-
-        # establish connection with client
-        c, addr = s.accept()
-
-        # lock acquired by client
-        print_lock.acquire()
-        print('Connected to :', addr[0], ':', addr[1])
-
-        # Start a new thread and return its identifier
-        start_new_thread(threaded, (c,))
 
     s.close()
 
