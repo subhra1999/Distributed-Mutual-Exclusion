@@ -2,21 +2,25 @@ import os, sys, time
 
 
 
-server_port = int(sys.argv[1])
-os.system(f"python3 server.py {server_port} 2 2 &")
+num_proc = int(sys.argv[1])
+num_simulations = 2
+server_port = int(sys.argv[2])
 
-time.sleep(5)
+ports_begin = int(sys.argv[3])
+
+os.system(f"python3 server.py {server_port} {num_proc} {num_simulations} &")
+
+# time.sleep(5)
 print("server started")
 
 
-num_proc = 1
-ports_begin = int(sys.argv[2])
 process_ids = 0
 
 def add_new_node(self_id):
     global ports_begin
+    os.system(f"gnome-terminal --title='{self_id}' -x bash -c 'python3 process.py {self_id} {ports_begin} {server_port}; exec bash'")
+    # os.system(f"python3 process.py {self_id} {ports_begin} {server_port} &")
     ports_begin += 1
-    os.system(f"python3 process.py {self_id} {ports_begin} {server_port} &")
     return ports_begin
 
 

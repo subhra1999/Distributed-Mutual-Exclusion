@@ -1,8 +1,10 @@
 
 # import socket programming library
-import socket, json
+import socket, json, time
 import sys, logging
 import RicartAgrawala as ricart_agrawala
+
+from colorama import Fore
 
 # import thread module
 from _thread import *
@@ -96,23 +98,60 @@ def Main():
     with open("config.txt", "a") as fp:
         lines = [f"\n{self_id}, {self_port}"]
         fp.writelines(lines)
+    
 
     # talk to main server in  a separate thread.
-    start_new_thread(thread_for_request, (server_port,))
+    # start_new_thread(thread_for_request, (server_port,))
 
     # a forever loop until client wants to exit
-    while True:
+    for i in range(2):
 
         # establish connection with client
         # c, addr = s.accept()
-        message, address = s.recvfrom(4096)
+            
+        # testing
 
-        print(f"received {message} from {address} in process {self_id}")
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # server_socket.connect(("localhost", server_port))
+
+        msg = {
+            "process_id": self_id,
+            "port":self_port
+        }
+        server_socket.sendto(json.dumps(msg).encode(), ("localhost", int(server_port)))
+        data = server_socket.recv(1024)
+
+        data_json = json.loads(data.decode())
 
 
+        localAddr = ("localhost", int(self_port))
+        procPID = self_id
+        procName = self_id
+        remoteAddr = data_json
+        remoteName = "not needed"
+        numRemotes = len(data_json)
+
+
+        ricart_agrawala.MutexInit(localAddr, procPID, procName, remoteAddr, remoteName, numRemotes, s)
+        ricart_agrawala.MutexLock('Mutex')
+        # print ('proc_a\n')
+        sleep_interval = 3 * self_id
+        time.sleep(sleep_interval)
+        ricart_agrawala.MutexUnlock('Mutex')
+        time.sleep(5)
+        ricart_agrawala.MutexExit()
+
+        # print(f"received {message} from {address} in process {self_id}")
+
+        print("sleepint for next request 10 second")
+        time.sleep(10)
+        print("goint for next request afdter 10 seconds")
+        # break
+        
+        print(f"{Fore.CYAN} NEXT ITERATIONS {Fore.RESET}")
 
         # Start a new thread and return its identifier
-        start_new_thread(thread_for_accepting_connections, ())
+        # start_new_thread(thread_for_accepting_connections, ())
 
     s.close()
 

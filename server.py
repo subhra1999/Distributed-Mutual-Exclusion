@@ -63,13 +63,13 @@ def Main():
         node_data = {}
         with open("config.txt", "r") as fp:
             content = fp.readlines()
-            print(f"{content=}")
+            # print(f"{content=}")
 
             for line in content:
                 if len(line) < 2: continue
 
                 line = line.split(",")
-                node_data[line[0]] = line[1]
+                node_data[line[0]] = ("localhost",int(line[1].strip()))
 
             # convert to json and send reply
 
