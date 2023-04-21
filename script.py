@@ -18,7 +18,7 @@ process_ids = 0
 
 def add_new_node(self_id):
     global ports_begin
-    os.system(f"gnome-terminal --title='{self_id}' -x bash -c 'python3 process.py {self_id} {ports_begin} {server_port}; exec bash'")
+    os.system(f"gnome-terminal --title='{self_id}' -x bash -c 'python3 process.py {self_id} {ports_begin} {server_port} {num_simulations}; exec bash'")
     # os.system(f"python3 process.py {self_id} {ports_begin} {server_port} &")
     ports_begin += 1
     return ports_begin

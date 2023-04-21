@@ -13,6 +13,7 @@ import threading
 self_id = int(sys.argv[1])
 self_port = int(sys.argv[2])
 server_port = int(sys.argv[3])
+num_simuations = int(sys.argv[4])
 print(f"{server_port=}")
 
 print_lock = threading.Lock()
@@ -78,22 +79,17 @@ def thread_for_request(server_port):
     pass
 
 
-def Main():
-    host = ""
-
-    # reserve a port on your computer
-    # in our case it is 12345 but it
-    # can be anything
-    port = self_port
+def start_process_communication():
+    
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    s.bind((host, port))
-    print("socket binded to port", port)
+    s.bind(("localhost", self_port))
+    print("socket binded to port", self_port)
 
     # put the socket into listening mode
     # s.listen(5)
-    print("socket is listening")
+    # print("socket is listening")
 
     with open("config.txt", "a") as fp:
         lines = [f"\n{self_id}, {self_port}"]
@@ -104,15 +100,13 @@ def Main():
     # start_new_thread(thread_for_request, (server_port,))
 
     # a forever loop until client wants to exit
-    for i in range(2):
+    for i in range(num_simuations):
 
-        # establish connection with client
-        # c, addr = s.accept()
-            
-        # testing
 
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # server_socket.connect(("localhost", server_port))
+
+        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
 
         msg = {
             "process_id": self_id,
@@ -128,33 +122,26 @@ def Main():
         procPID = self_id
         procName = self_id
         remoteAddr = data_json
-        remoteName = "not needed"
         numRemotes = len(data_json)
 
 
-        ricart_agrawala.MutexInit(localAddr, procPID, procName, remoteAddr, remoteName, numRemotes, s)
-        ricart_agrawala.MutexLock('Mutex')
-        # print ('proc_a\n')
+        ricart_agrawala.initialize_mutex(localAddr, procPID, procName, remoteAddr, numRemotes, s)
+        ricart_agrawala.lock_mutex()
         sleep_interval = 3 * self_id
         time.sleep(sleep_interval)
-        ricart_agrawala.MutexUnlock('Mutex')
+        ricart_agrawala.release_mutex()
         time.sleep(5)
-        ricart_agrawala.MutexExit()
 
-        # print(f"received {message} from {address} in process {self_id}")
-
-        print("sleepint for next request 10 second")
+        print("sleeping for next request 10 second")
         time.sleep(10)
-        print("goint for next request afdter 10 seconds")
+        print("goint for next request after 10 seconds")
         # break
         
         print(f"{Fore.CYAN} NEXT ITERATIONS {Fore.RESET}")
 
-        # Start a new thread and return its identifier
-        # start_new_thread(thread_for_accepting_connections, ())
 
     s.close()
 
 
 if __name__ == '__main__':
-    Main()
+    start_process_communication()
