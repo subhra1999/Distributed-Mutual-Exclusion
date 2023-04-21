@@ -25,10 +25,10 @@ def thread_message_listener(listening_socket):
         print(f"{Fore.YELLOW} {current_process_info['procPID']} GOT MESSAGE in message listener from {remoteMessage['procInfo']['procPID']}  {Fore.RESET}")
         print(f"from address = {addr}")
         print("####################")
-        MessageHandler(msg)
+        handle_message(msg)
 
 
-def MessageHandler(message):
+def handle_message(message):
 
     remoteMessage = json.loads(message)
     print(f"{remoteMessage=}")

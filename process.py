@@ -2,7 +2,7 @@
 # import socket programming library
 import socket, json, time
 import sys, logging
-import RicartAgrawala as ricart_agrawala
+import ra_mutex as ricart_agrawala
 
 from colorama import Fore
 
@@ -100,8 +100,13 @@ def start_process_communication():
     # start_new_thread(thread_for_request, (server_port,))
 
     # a forever loop until client wants to exit
-    for i in range(num_simuations):
 
+    i_sim_count = 1
+    while True:
+
+    # for i in range(num_simuations):
+        
+            
 
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -125,19 +130,22 @@ def start_process_communication():
         numRemotes = len(data_json)
 
 
-        ricart_agrawala.initialize_mutex(localAddr, procPID, procName, remoteAddr, numRemotes, s)
-        ricart_agrawala.lock_mutex()
-        sleep_interval = 3 * (self_id + 1)
-        time.sleep(sleep_interval)
-        ricart_agrawala.release_mutex()
-        time.sleep(5)
+        if i_sim_count <= num_simuations:
+            ricart_agrawala.initialize_mutex(localAddr, procPID, procName, remoteAddr, numRemotes, s)
+            ricart_agrawala.lock_mutex()
+            sleep_interval = 3 * (self_id + 1)
+            time.sleep(sleep_interval)
+            ricart_agrawala.release_mutex()
+            time.sleep(5)
 
-        print("sleeping for next request 10 second")
-        time.sleep(10)
-        print("goint for next request after 10 seconds")
-        # break
-        
-        print(f"{Fore.CYAN} NEXT ITERATIONS {Fore.RESET}")
+            print("sleeping for next request 10 second")
+            time.sleep(10)
+            print("goint for next request after 10 seconds")
+
+            i_sim_count += 1
+            # break
+            
+            print(f"{Fore.CYAN} NEXT ITERATIONS {i_sim_count} {Fore.RESET}")
 
 
     s.close()
