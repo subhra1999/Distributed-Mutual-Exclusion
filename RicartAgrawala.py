@@ -5,48 +5,21 @@ from colorama import Fore
 # import cPickle as pickle
 
 
-REPLY = 0
-REQUEST = 1
-WANTED = 2
-HELD = 3
-RELEASED = 4
 
-# Stores the information of the local process
-current_process_info = {
-    'procName':         None,
-    'procPID':          None,
-    'procState':        None,
-    'procTimestamp':    None,
-    'procAddr':         None,
-    'procRemotes':      None
-}
-
-deferred_requests_queue, reply_pending_queue, remote_processes_addresses  = list(), list(), dict()
-
-MAXRECV = 8192
-PRINT_LOG = True
-
-
-
-def SendMessage(addr, message):
-    if PRINT_LOG:
-        print(f"{current_process_info['procPID']} Entering --> SendMessage\n")
-    # if DEBUG:
-    #     print(f"{localInfo['procPID']} Sending message --> {message['procInfo']['procName']}")
+def send_message(addr, message):
+    print(f"{current_process_info['procPID']} sending message")
     sendingSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sendingSocket.sendto(str(message).encode(), addr)
     sendingSocket.close()
 
-    if PRINT_LOG:
-        print(f'{current_process_info["procPID"]} Exiting --> SendMessage')
-    return True
+    print(f'{current_process_info["procPID"]}  message sent')
 
 
-def MessageListener(listening_socket):
+def thread_message_listener(listening_socket):
     
 
     while True:
-        msg, addr = listening_socket.recvfrom(MAXRECV)
+        msg, addr = listening_socket.recvfrom(MAX_CAPACITY)
         msg = msg.decode()
         remoteMessage = json.loads(msg)
         print(f"{Fore.YELLOW} {current_process_info['procPID']} GOT MESSAGE in message listener from {remoteMessage['procInfo']['procPID']}  {Fore.RESET}")
@@ -68,8 +41,7 @@ def MessageHandler(message):
                 and current_process_info["procState"] == WANTED
             ):
             
-            if PRINT_LOG:
-                print(f"Deffered message from --> {remoteMessage['procInfo']['procName']}")
+            print(f"Deffered message of  {remoteMessage['procInfo']['procName']}")
             
             print(f"{Fore.RED} putting in deferredQueue from {remoteMessage['procInfo']['procPID']} {Fore.RESET}")
             deferred_requests_queue.append(remoteMessage['procInfo']['procAddr'])
@@ -77,34 +49,27 @@ def MessageHandler(message):
 
         else:
             message = {"type": REPLY, "procInfo": current_process_info}
-            if PRINT_LOG:
-                print(f"Sent reply to --> {remoteMessage['procInfo']['procName']}")
+            print(f"Replied to {remoteMessage['procInfo']['procName']}")
             print(f"{Fore.GREEN} Sending reply message from {current_process_info['procPID']} to {remoteMessage['procInfo']['procName']} {Fore.RESET}")
 
-            SendMessage(remoteMessage["procInfo"]["procAddr"], json.dumps(message))
+            send_message(remoteMessage["procInfo"]["procAddr"], json.dumps(message))
 
     if remoteMessage['type'] == REPLY:
-        if PRINT_LOG:
-            print(f"{Fore.GREEN} Reply recieved from --> {remoteMessage['procInfo']['procName']} {Fore.RESET}")
-
-            # print(f"Reply recieved from --> {remoteMessage['procInfo']['procName']}")
+        print(f"{Fore.GREEN} Got reply from {remoteMessage['procInfo']['procName']} {Fore.RESET}")
         reply_pending_queue.remove(remoteMessage["procInfo"]["procAddr"])
 
 
 
 
 def initialize_mutex(localAddr, procPID, procName, remoteAddr, numRemotes, self_socket):
-    # Initalize the local process info
-    current_process_info["procName"] = procName
-    current_process_info["procPID"] = procPID
+    
+    current_process_info["procName"], current_process_info["procPID"] = procName, procPID
     current_process_info["procState"] = RELEASED
-    current_process_info["procAddr"] = tuple(localAddr)
-    current_process_info["procRemotes"] = numRemotes
+    current_process_info["procAddr"], current_process_info["procRemotes"]  = tuple(localAddr), numRemotes
     
         
 
-    if PRINT_LOG:
-        print(f"{current_process_info['procPID']} Entering --> MutexInit\n")
+    print(f"{current_process_info['procPID']} Initialization begin")
     
     global listening_socket
     listening_socket = self_socket
@@ -114,17 +79,14 @@ def initialize_mutex(localAddr, procPID, procName, remoteAddr, numRemotes, self_
         remote_processes_addresses[key] = (val[0], val[1])
     
     
-    msgThread = threading.Thread(target=MessageListener, args=(self_socket,))
+    msgThread = threading.Thread(target=thread_message_listener, args=(self_socket,))
     msgThread.start()
 
     time.sleep(5)
-    if PRINT_LOG:
-        print(f"{current_process_info['procPID']} Exiting --> MutexInit\n----------------------------")
+    print(f"{current_process_info['procPID']} Intialization done")
 
 
 def lock_mutex():
-    if PRINT_LOG:
-        print(f"{current_process_info['procPID']} Entering --> MutexLock\n")
     current_process_info["procState"] = WANTED
 
     current_process_info["procTimestamp"] = time.time()
@@ -141,25 +103,23 @@ def lock_mutex():
         address = remote_processes_addresses[key]
         print(f"{Fore.RED} Sending request message from {current_process_info['procPID']} to {key} @ {current_process_info['procTimestamp']} {Fore.RESET}")
 
-        SendMessage(address, json.dumps(requestMessage))
+        send_message(address, json.dumps(requestMessage))
         reply_pending_queue.append(address)
         print(f"{reply_pending_queue=}")
     
-    print(f"{reply_pending_queue}")
+    print(f"{reply_pending_queue=}")
 
     while len(reply_pending_queue) > 0:
         pass
 
     print(f"{Fore.YELLOW} Entered CS {current_process_info['procPID']} {Fore.RESET}")
 
-    if PRINT_LOG:
-        print(f"{current_process_info['procPID']}Exiting  -->  MutexLock")
+    print(f"{current_process_info['procPID']}Done lock_mutex")
     return True
 
 
 def release_mutex():
-    if PRINT_LOG:
-        print(f"{current_process_info['procPID']}Entering --> MutexUnlock\n")
+    print(f"{current_process_info['procPID']}In release_mutex\n")
     current_process_info['procState'] = RELEASED
     print(f"{Fore.YELLOW} Exited CS {current_process_info['procPID']} {Fore.RESET}")
 
@@ -173,15 +133,30 @@ def release_mutex():
     for address in copy_def_q:
         print(f"{Fore.GREEN} Sending deferred reply message from {current_process_info['procPID']} to {replyMessage['procInfo']['procName']} {Fore.RESET}")
 
-        SendMessage(address, json.dumps(replyMessage))
+        send_message(address, json.dumps(replyMessage))
         print(f"{deferred_requests_queue=}")
         deferred_requests_queue.remove(address)
 
-    if PRINT_LOG:
-        print(f"{current_process_info['procPID']}Exiting  --> MutexUnlock")
+    print(f"{current_process_info['procPID']}Exit CS")
     return True
 
 
-# def quit_mutex():
-#     print(f"{Fore.RED}Exiting Mutex{Fore.RESET}")
+
+STATUS_CODES = [0,1,2,3,4]
+REPLY, REQUEST, WANTED = STATUS_CODES[0], STATUS_CODES[1], STATUS_CODES[2]
+HELD, RELEASED = STATUS_CODES[3], STATUS_CODES[4]
+
+
+current_process_info = dict()
+
+current_process_info['procName'] = None
+current_process_info['procPID'] = None
+current_process_info['procState'] = None
+current_process_info['procTimestamp'] = None
+current_process_info['procAddr'] = None
+current_process_info['procRemotes'] = None
+
+deferred_requests_queue, reply_pending_queue, remote_processes_addresses  = list(), list(), dict()
+
+MAX_CAPACITY = 8192
 

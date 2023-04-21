@@ -127,7 +127,7 @@ def start_process_communication():
 
         ricart_agrawala.initialize_mutex(localAddr, procPID, procName, remoteAddr, numRemotes, s)
         ricart_agrawala.lock_mutex()
-        sleep_interval = 3 * self_id
+        sleep_interval = 3 * (self_id + 1)
         time.sleep(sleep_interval)
         ricart_agrawala.release_mutex()
         time.sleep(5)
