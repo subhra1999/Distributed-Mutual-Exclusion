@@ -1,4 +1,8 @@
 
+<<<<<<< HEAD
+=======
+import time
+>>>>>>> pawar
 # import socket programming library
 import socket, json, time
 import sys, logging
@@ -19,8 +23,35 @@ print(f"{server_port=}")
 print_lock = threading.Lock()
 
 # thread function
+#############################3
+# thread for sending heartbeat
+
+SERVER_HEART_BEAT_PORT = 1729
+
+def heart_beat_sender_thread():
+    print("Started heartbeat thread, 5 secs interaval")
+    client_socket_hb = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    client_socket_hb.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    msg = {
+        "process_id": self_id,
+        "port":self_port,
+        "msg_type":"ZINDA",
+        "time_stamp": time.time()
+    }
+
+    while True:
+
+        client_socket_hb.sendto(json.dumps(msg).encode(), ("localhost", int(SERVER_HEART_BEAT_PORT)))
+        time.sleep(5)
+    # data = server_socket.recv(1024)
 
 
+client_heart_thread = threading.Thread(target=heart_beat_sender_thread)
+client_heart_thread.start()
+
+
+#############################################
 def thread_for_accepting_connections():
     while True:
         logging.debug("Received connection")
@@ -118,7 +149,6 @@ def start_process_communication():
             "port":self_port
         }
         server_socket.sendto(json.dumps(msg).encode(), ("localhost", int(server_port)))
-        #print("**************************************",json.dumps(msg).encode())
         data = server_socket.recv(1024)
 
         data_json = json.loads(data.decode())
@@ -133,7 +163,7 @@ def start_process_communication():
 
         if i_sim_count <= num_simuations:
             ricart_agrawala.initialize_mutex(localAddr, procPID, procName, remoteAddr, numRemotes, s)
-            time.sleep(2)
+            # time.sleep(2)
             ricart_agrawala.lock_mutex()
             sleep_interval = 3 * (self_id + 1)
             time.sleep(sleep_interval)

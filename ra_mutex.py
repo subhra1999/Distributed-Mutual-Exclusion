@@ -144,7 +144,7 @@ def release_mutex():
     
     copy_def_q = deferred_requests_queue.copy()
     for key in list(copy_def_q):
-
+    
         if (int)(key) in map_state:
             print(f"{Fore.GREEN} Sending deferred reply message from {current_process_info['procPID']} to {key} {Fore.RESET}")
 

@@ -1,4 +1,9 @@
 import os, sys,json
+from colorama import Fore
+import threading
+import socket, json, time
+from threading import Lock, Thread, Event
+
 
 
 server_port = int(sys.argv[1])
@@ -6,8 +11,68 @@ num_proc = int(sys.argv[2])
 num_simulations = int(sys.argv[3])
 
 port_seed = 3000
+MAX_CAPACITY = 8192
 
-# listen on port 3000
+############################################
+
+beatDict = {}
+
+dictLock = Lock()
+
+
+def update(remote_message):
+        "Create or update a dictionary entry"
+        dictLock.acquire()
+        beatDict[remote_message["process_id"]] = remote_message
+        dictLock.release()
+
+def extractSilent(howPast):
+    "Returns a list of entries older than howPast"
+    silent = []
+    when = time.time() - howPast
+    dictLock.acquire()
+    for key in beatDict.keys(  ):
+        if beatDict[key]["time_stamp"] < when:
+            silent.append(beatDict[key])
+    dictLock.release()
+    return silent
+
+
+
+
+
+def heart_thread_function(hb_port):
+    hb_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    hb_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    
+
+    print(f"heartbeat server before binding {hb_port}")
+    hb_socket.bind(("localhost", hb_port))
+    print("heartbeat socket binded to port", hb_port)
+
+    while True:
+        msg, addr = hb_socket.recvfrom(MAX_CAPACITY)
+        msg = msg.decode()
+        remoteMessage = json.loads(msg)
+
+        update(remoteMessage)
+        print(f"{beatDict=}")
+
+        silent_processes = extractSilent(5)
+        print(f"{silent_processes=}")
+
+        print(f"{Fore.WHITE} Received  Heartbeat from {remoteMessage}")
+
+
+
+HEART_BEAT_PORT = 1729
+
+
+heart_thread = threading.Thread(target=heart_thread_function, args=(HEART_BEAT_PORT,))
+heart_thread.start()
+
+##############################
+
 
 # import socket programming library
 import socket
