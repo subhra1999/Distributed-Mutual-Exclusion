@@ -43,7 +43,7 @@ def handle_message(message):
             
             print(f"Deffered message of  {remoteMessage['procInfo']['procName']}")
             
-            print(f"{Fore.RED} putting in deferredQueue from {remoteMessage['procInfo']['procPID']} {Fore.RESET}")
+            print(f"{Fore.RED} putting in deferred queue from {remoteMessage['procInfo']['procPID']} {Fore.RESET}")
             deferred_requests_queue.append(remoteMessage['procInfo']['procAddr'])
             print(f"{deferred_requests_queue=}")
 

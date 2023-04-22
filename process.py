@@ -1,4 +1,5 @@
 
+import time
 # import socket programming library
 import socket, json, time
 import sys, logging
@@ -19,8 +20,35 @@ print(f"{server_port=}")
 print_lock = threading.Lock()
 
 # thread function
+#############################3
+# thread for sending heartbeat
+
+SERVER_HEART_BEAT_PORT = 1729
+
+def heart_beat_sender_thread():
+    print("Started heartbeat thread, 5 secs interaval")
+    client_socket_hb = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    client_socket_hb.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    msg = {
+        "process_id": self_id,
+        "port":self_port,
+        "msg_type":"ZINDA",
+        "time_stamp": time.time()
+    }
+
+    while True:
+
+        client_socket_hb.sendto(json.dumps(msg).encode(), ("localhost", int(SERVER_HEART_BEAT_PORT)))
+        time.sleep(5)
+    # data = server_socket.recv(1024)
 
 
+client_heart_thread = threading.Thread(target=heart_beat_sender_thread)
+client_heart_thread.start()
+
+
+#############################################
 def thread_for_accepting_connections():
     while True:
         logging.debug("Received connection")
