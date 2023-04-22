@@ -1,8 +1,4 @@
 
-<<<<<<< HEAD
-=======
-import time
->>>>>>> pawar
 # import socket programming library
 import socket, json, time
 import sys, logging
