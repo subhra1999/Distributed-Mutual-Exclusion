@@ -20,11 +20,11 @@ beatDict = {}
 dictLock = Lock()
 
 
-def update(entry):
+def update(remote_message):
         "Create or update a dictionary entry"
-        dictLock.acquire(  )
-        beatDict[entry] = time.time()
-        dictLock.release(  )
+        dictLock.acquire()
+        beatDict[remote_message["process_id"]] = remote_message
+        dictLock.release()
 
 def extractSilent(howPast):
     "Returns a list of entries older than howPast"
@@ -32,8 +32,8 @@ def extractSilent(howPast):
     when = time.time() - howPast
     dictLock.acquire()
     for key in beatDict.keys(  ):
-        if beatDict[key] < when:
-            silent.append(key)
+        if beatDict[key]["time_stamp"] < when:
+            silent.append(beatDict[key])
     dictLock.release()
     return silent
 
@@ -55,7 +55,7 @@ def heart_thread_function(hb_port):
         msg = msg.decode()
         remoteMessage = json.loads(msg)
 
-        update(remoteMessage["process_id"])
+        update(remoteMessage)
         print(f"{beatDict=}")
 
         silent_processes = extractSilent(5)
