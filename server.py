@@ -1,4 +1,4 @@
-import os, sys,json
+import os, sys,json,pickle
 from colorama import Fore
 import threading
 import socket, json, time
@@ -30,14 +30,27 @@ def extractSilent(howPast):
     "Returns a list of entries older than howPast"
     silent = []
     when = time.time() - howPast
-    dictLock.acquire()
+    #dictLock.acquire()
     for key in beatDict.keys(  ):
         if beatDict[key]["time_stamp"] < when:
             silent.append(beatDict[key])
-    dictLock.release()
+    #dictLock.release()
     return silent
 
+def extractAlive(howPast):
+    "Returns a list of entries older than howPast"
+    print(f"{Fore.RED} in extract alive {Fore.RESET}")
+    silent = dict()
+    when = time.time() - howPast
+    dictLock.acquire()
+    for key in beatDict.keys():
+        if beatDict[key]["time_stamp"] >= when:
+            # silent.append(beatDict[key])
+            silent[key] = beatDict[key]
 
+
+    dictLock.release()
+    return silent
 
 
 
@@ -58,11 +71,10 @@ def heart_thread_function(hb_port):
         update(remoteMessage)
         print(f"{beatDict=}")
 
-        silent_processes = extractSilent(5)
-        print(f"{silent_processes=}")
+        # silent_processes = extractSilent(5)
+        # print(f"{silent_processes=}")
 
         print(f"{Fore.WHITE} Received  Heartbeat from {remoteMessage}")
-
 
 
 HEART_BEAT_PORT = 1729
@@ -74,6 +86,40 @@ heart_thread.start()
 ##############################
 
 
+Live_checker_port = 2729
+
+def sendAlive():
+    hb_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    hb_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    hb_socket.bind(("localhost", Live_checker_port))
+
+    while True:
+
+        msg, addr = hb_socket.recvfrom(MAX_CAPACITY)
+        print(f"{Fore.YELLOW}received send alive socket{Fore.RESET}")
+        #msg = msg.decode()
+        #remoteMessage = json.loads(msg)
+
+        #update(remoteMessage)
+        #print(f"{beatDict=}")
+
+        alive_processes = extractAlive(10)
+        hb_socket.sendto(json.dumps(alive_processes).encode(), addr)
+
+
+        # print(f"{alive_processes=}")
+        # with open("alive.pkl","wb") as f:
+        #     pickle.dump(alive_processes,f)
+        
+        time.sleep(2)
+        #hb_socket.sendto(json.dumps(alive_processes).encode(), addr)
+
+
+
+alive_thread = threading.Thread(target=sendAlive)
+alive_thread.start()
+
+###########################3
 # import socket programming library
 import socket
 
@@ -121,9 +167,9 @@ def Main():
         # reverse the given string from client
         # data = data[::-1]
         request_type = data
-        print(f"{request_type=}")
+        # print(f"{request_type=}")
         request_json = json.loads(data)
-        print("recerved requsf for peerlist on server")
+        # print("recerved requsf for peerlist on server")
 
         node_data = {}
         with open("config.txt", "r") as fp:

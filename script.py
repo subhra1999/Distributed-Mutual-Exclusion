@@ -2,11 +2,10 @@ import os, sys, time
 
 
 
-num_proc = int(sys.argv[1])
-num_simulations = 2
+num_simulations = int(sys.argv[1])
 server_port = int(sys.argv[2])
-
 ports_begin = int(sys.argv[3])
+num_proc = int(input("How many nodes you want to start with: "))
 
 with open("config.txt", "w") as f:
     f.write("")
@@ -22,6 +21,7 @@ process_ids = 0
 
 def add_new_node(self_id):
     global ports_begin
+    time.sleep(1)
     os.system(f"gnome-terminal --title='{self_id}' -x bash -c 'python3 process.py {self_id} {ports_begin} {server_port} {num_simulations}; exec bash'")
     # os.system(f"python3 process.py {self_id} {ports_begin} {server_port} &")
     ports_begin += 1
@@ -30,7 +30,7 @@ def add_new_node(self_id):
 
 process_id_port = {}
 
-num_proc = int(input("How many nodes you want to start with: "))
+
 
 for i in range(num_proc):
     print(f"num_proc={i}")
